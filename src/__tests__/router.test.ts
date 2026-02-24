@@ -1019,8 +1019,12 @@ describe("routeKey", () => {
 
 	it("should set the correct routeKey for parameterised routes", () => {
 		const routes = {
-			post: createRoute("/posts/:slug", () => ({ PageComponent: MockComponent })),
-			user: createRoute("/users/:id", () => ({ PageComponent: AnotherComponent })),
+			post: createRoute("/posts/:slug", () => ({
+				PageComponent: MockComponent,
+			})),
+			user: createRoute("/users/:id", () => ({
+				PageComponent: AnotherComponent,
+			})),
 		};
 
 		const router = createRouter(routes);
@@ -1032,7 +1036,9 @@ describe("routeKey", () => {
 	it("should set the correct routeKey when exact and parameterised routes overlap", () => {
 		const routes = {
 			me: createRoute("/users/me", () => ({ PageComponent: MockComponent })),
-			user: createRoute("/users/:id", () => ({ PageComponent: AnotherComponent })),
+			user: createRoute("/users/:id", () => ({
+				PageComponent: AnotherComponent,
+			})),
 		};
 
 		const router = createRouter(routes);
