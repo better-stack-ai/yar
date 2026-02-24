@@ -104,11 +104,13 @@ type ExtractRouteReturn<R> = R extends (...args: any[]) => infer Return
 	? Return
 	: never;
 
-// The return type for getRoute, combining each handler return with params
-// We distribute the intersection over the union to preserve all properties
+// The return type for getRoute, combining each handler return with params and routeKey.
+// Distributing the mapped type over the union preserves the discriminated union so
+// TypeScript can narrow params and other properties based on routeKey.
 type GetRouteReturn<Routes extends Record<string, Route>> = {
 	[K in keyof Routes]: ExtractRouteReturn<Routes[K]> & {
 		params: Record<string, string>;
+		routeKey: K;
 	};
 }[keyof Routes];
 
@@ -192,6 +194,12 @@ export const createRouter = <
 				extra,
 			} = responseObj;
 
+			// Resolve the route key by finding the entry whose handler is the same
+			// reference as the one the internal router matched.
+			const routeKey = Object.entries(routes).find(
+				([, v]) => v === handler,
+			)?.[0] as keyof E | undefined;
+
 			return {
 				PageComponent,
 				LoadingComponent,
@@ -200,6 +208,7 @@ export const createRouter = <
 				loader,
 				meta,
 				extra,
+				routeKey,
 			} as GetRouteReturn<E>;
 		},
 	};

@@ -994,3 +994,50 @@ describe("Edge cases", () => {
 		}
 	});
 });
+
+describe("routeKey", () => {
+	it("should expose the route key on a matched route", () => {
+		const routes = {
+			home: createRoute("/", () => ({ PageComponent: MockComponent })),
+			about: createRoute("/about", () => ({ PageComponent: AnotherComponent })),
+		};
+
+		const router = createRouter(routes);
+
+		expect(router.getRoute("/")?.routeKey).toBe("home");
+		expect(router.getRoute("/about")?.routeKey).toBe("about");
+	});
+
+	it("should return null for unmatched paths (no routeKey)", () => {
+		const routes = {
+			home: createRoute("/", () => ({ PageComponent: MockComponent })),
+		};
+
+		const router = createRouter(routes);
+		expect(router.getRoute("/missing")).toBeNull();
+	});
+
+	it("should set the correct routeKey for parameterised routes", () => {
+		const routes = {
+			post: createRoute("/posts/:slug", () => ({ PageComponent: MockComponent })),
+			user: createRoute("/users/:id", () => ({ PageComponent: AnotherComponent })),
+		};
+
+		const router = createRouter(routes);
+
+		expect(router.getRoute("/posts/hello-world")?.routeKey).toBe("post");
+		expect(router.getRoute("/users/42")?.routeKey).toBe("user");
+	});
+
+	it("should set the correct routeKey when exact and parameterised routes overlap", () => {
+		const routes = {
+			me: createRoute("/users/me", () => ({ PageComponent: MockComponent })),
+			user: createRoute("/users/:id", () => ({ PageComponent: AnotherComponent })),
+		};
+
+		const router = createRouter(routes);
+
+		expect(router.getRoute("/users/me")?.routeKey).toBe("me");
+		expect(router.getRoute("/users/123")?.routeKey).toBe("user");
+	});
+});
