@@ -17,16 +17,15 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20.x
-          
       - uses: pnpm/action-setup@v4
 
       - uses: actions/setup-node@v4
         with:
-            node-version: 20.x
-            registry-url: 'https://registry.npmjs.org'
+          node-version: 20.x
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Update npm
+        run: npm install -g npm@latest
 
       - run: pnpm install
       
@@ -39,10 +38,8 @@ jobs:
         run: |
           TAG="${GITHUB_REF#refs/tags/}"
           if [[ "$TAG" =~ -(next|canary|beta|rc) ]]; then
-            # Extract pre-release tag (e.g., beta, rc)
             NPM_TAG=${BASH_REMATCH[1]}
           else
-            # Check if the commit is on the main branch
             git fetch origin main
             if git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
               NPM_TAG="latest"
@@ -56,6 +53,4 @@ jobs:
           echo "Using npm tag: $NPM_TAG"
 
       - name: Publish to npm
-        run: pnpm publish --access public --provenance --no-git-checks --tag ${{ steps.determine_npm_tag.outputs.npm_tag }}
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --access public --provenance --tag ${{ steps.determine_npm_tag.outputs.npm_tag }}
