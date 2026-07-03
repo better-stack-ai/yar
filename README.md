@@ -4,7 +4,7 @@ A simple, type-safe router for React that works with any framework.
 
 ## Why use this?
 
-- ✨ **Super Simple** - Only 2 functions: `createRoute` and `createRouter`
+- ✨ **Super Simple** - A tiny API: `createRoute` and `createRouter` (plus optional `defineRoute`/`defineRoutes` sugar)
 - 🔒 **Type Safe** - TypeScript knows your route params automatically
 - 🎯 **Flexible** - Works with any React framework
 - ✅ **Validated** - Built-in query parameter validation
@@ -102,6 +102,44 @@ async function handleRequest(url: string) {
 const staticRoutes = Object.values(router.routes)
   .filter(route => route.meta?.isStatic);
 ```
+
+## Declarative Routes (less boilerplate)
+
+If you don't need custom closures per route, `defineRoute` and `defineRoutes` remove the handler wiring entirely. Components receive the route context (`params`, `query`) as props, and `loader`/`meta`/`extra` receive it as their first argument:
+
+```tsx
+import { defineRoute, defineRoutes, createRouter } from "@btst/yar";
+
+// Single route
+const postRoute = defineRoute("/blog/:slug", {
+  page: BlogPostPage, // rendered with { params, query } as props
+  loading: Spinner,
+  error: ErrorPage,
+  loader: (ctx, signal?: AbortSignal) =>
+    fetch(`/api/posts/${ctx.params.slug}`, { signal }).then((r) => r.json()),
+  meta: (ctx, post) => [{ name: "title", content: post?.title ?? ctx.params.slug }],
+  extra: (ctx) => ({ breadcrumbs: ["Home", "Blog", ctx.params.slug] }),
+});
+
+// Many routes at once, with optional page overrides
+const routes = defineRoutes(
+  {
+    home: defineRoute("/", { page: HomePage }, undefined, { isStatic: true }),
+    post: defineRoute("/blog/:slug", {
+      page: BlogPostPage,
+      loader: (ctx) => fetchPost(ctx.params.slug),
+      meta: (ctx) => [{ name: "title", content: ctx.params.slug }],
+    }),
+  },
+  { pages: { post: CustomPostPage } } // swap a page component per key
+);
+
+const router = createRouter(routes);
+```
+
+Overridden pages still receive the route context (`params`, `query`) as props. `defineRoutes` also accepts plain `createRoute` routes; overriding those swaps the `PageComponent` as-is.
+
+`defineRoute` returns a regular route, so it composes freely with `createRoute` routes in the same `createRouter` call. Use `createRoute` when you need full control over the handler closure; use `defineRoute`/`defineRoutes` for the common declarative case.
 
 ## What You Need to Know
 
